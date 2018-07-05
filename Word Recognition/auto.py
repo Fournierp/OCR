@@ -1,21 +1,60 @@
-import numpy as np
 import cv2
+import numpy as np
+from matplotlib import pyplot as plt
 
-im = cv2.imread('cap.png')
-imgray = cv2.cvtColor(im,cv2.COLOR_BGR2GRAY)
-ret,thresh = cv2.threshold(imgray,127,255,0)
-image, contours, hierarchy = cv2.findContours(thresh,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+img = cv2.imread('cap.png',0)
 
-# img = cv2.drawContours(im, contours, -1, (0,255,0), 3)
-# print(contours)
-cv2.namedWindow("im", cv2.WINDOW_AUTOSIZE)        # create windows, use WINDOW_AUTOSIZE for a fixed window size
-cv2.namedWindow("img", cv2.WINDOW_AUTOSIZE)           # or use WINDOW_NORMAL to allow window resizing
+img = cv2.medianBlur(img,5)
+th2 = cv2.adaptiveThreshold(img, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 11, 2)
 
-cv2.imshow("im", im)         # show windows
-cv2.imshow("img", image)
+kernel = np.ones((2,2), np.uint8)
+erosion = cv2.erode(th2, kernel, iterations = 1)
+dilation = cv2.dilate(th2, kernel, iterations = 1)
+kernel = np.ones((2,2), np.uint8)
+# dilation2 = cv2.dilate(dilation, kernel, iterations = 10)
 
-cv2.waitKey()                               # hold windows open until user presses a key
-cv2.destroyAllWindows()                     # remove windows from memory
+im2,contours,hierarchy = cv2.findContours(dilation, 1, 2)
+
+cnt = contours[0]
+M = cv2.moments(cnt)
+# print( M )
+rect = cv2.minAreaRect(cnt)
+box = cv2.boxPoints(rect)
+box = np.int0(box)
+cv2.drawContours(img,[box],0,(0,0,255),2)
+
+titles = ['Original Image', 'Adaptive Mean Thresholding', 'erosion', 'dilation']
+images = [img, th2, im2, dilation]
+
+
+# cv2.imshow('res2', approx)
+
+for i in range(4):
+    plt.subplot(2,2,i+1),plt.imshow(images[i],'gray')
+    plt.title(titles[i])
+    plt.xticks([]),plt.yticks([])
+
+plt.show()
+
+# import numpy as np
+# import cv2
+# import matplotlib as plt
+#
+# im = cv2.imread('cap.png')
+# imgray = cv2.cvtColor(im,cv2.COLOR_BGR2GRAY)
+# ret,thresh = cv2.threshold(imgray,127,255,0)
+# image, contours, hierarchy = cv2.findContours(thresh,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+#
+# # img = cv2.drawContours(im, contours, -1, (0,255,0), 3)
+# # print(contours)
+# cv2.namedWindow("im", cv2.WINDOW_AUTOSIZE)        # create windows, use WINDOW_AUTOSIZE for a fixed window size
+# cv2.namedWindow("img", cv2.WINDOW_AUTOSIZE)           # or use WINDOW_NORMAL to allow window resizing
+#
+# cv2.imshow("im", im)         # show windows
+# cv2.imshow("img", image)
+#
+# cv2.waitKey()                               # hold windows open until user presses a key
+# cv2.destroyAllWindows()                     # remove windows from memory
 
 # CannyStill.py
 
