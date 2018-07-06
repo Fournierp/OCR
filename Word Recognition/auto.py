@@ -2,37 +2,42 @@ import cv2
 import numpy as np
 from matplotlib import pyplot as plt
 
-img = cv2.imread('cap.png',0)
+img = cv2.imread('cap.png', 0)
+img2 = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+img3 = cv2.medianBlur(img2, 5)
+th2 = cv2.adaptiveThreshold(
+    img3, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 11, 2)
 
-img = cv2.medianBlur(img,5)
-th2 = cv2.adaptiveThreshold(img, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 11, 2)
-
-kernel = np.ones((2,2), np.uint8)
-erosion = cv2.erode(th2, kernel, iterations = 1)
-dilation = cv2.dilate(th2, kernel, iterations = 1)
-kernel = np.ones((2,2), np.uint8)
-# dilation2 = cv2.dilate(dilation, kernel, iterations = 10)
-
-im2,contours,hierarchy = cv2.findContours(dilation, 1, 2)
-
-cnt = contours[0]
-M = cv2.moments(cnt)
-# print( M )
-rect = cv2.minAreaRect(cnt)
-box = cv2.boxPoints(rect)
-box = np.int0(box)
-cv2.drawContours(img,[box],0,(0,0,255),2)
-
-titles = ['Original Image', 'Adaptive Mean Thresholding', 'erosion', 'dilation']
-images = [img, th2, im2, dilation]
-
-
-# cv2.imshow('res2', approx)
+titles = ['Original Image', 'Color', 'Blur', 'Tresh']
+images = [img, img2, img3, th2]
 
 for i in range(4):
-    plt.subplot(2,2,i+1),plt.imshow(images[i],'gray')
+    plt.subplot(2, 2, i + 1), plt.imshow(images[i], 'gray')
     plt.title(titles[i])
-    plt.xticks([]),plt.yticks([])
+    plt.xticks([]), plt.yticks([])
+
+plt.show()
+
+kernel = np.ones((2, 2), np.uint8)
+dilation = cv2.dilate(th2, kernel, iterations=1)
+erosion = cv2.erode(th2, kernel, iterations=1)
+
+# im2, contours, hierarchy = cv2.findContours(dilation, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+im2, contours, hierarchy = cv2.findContours(dilation, 1, 2)
+cv2.drawContours(img, contours, -1, (0, 255, 0), 3)
+
+rect = cv2.minAreaRect(contours)
+box = cv2.boxPoints(rect)
+box = np.int0(box)
+cv2.drawContours(img, [box], 0, (0, 0, 255), 2)
+
+titles2 = ['Original Image', 'erosion', 'dilation']
+images2 = [img, erosion, dilation]
+
+for i in range(3):
+    plt.subplot(2, 2, i + 1), plt.imshow(images2[i], 'gray')
+    plt.title(titles2[i])
+    plt.xticks([]), plt.yticks([])
 
 plt.show()
 
