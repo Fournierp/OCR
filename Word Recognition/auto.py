@@ -1,45 +1,94 @@
 import cv2
 import numpy as np
 from matplotlib import pyplot as plt
+import imutils
 
+#Load image and convert to grey.
 img = cv2.imread('cap.png', 0)
-img2 = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-img3 = cv2.medianBlur(img2, 5)
-th2 = cv2.adaptiveThreshold(
-    img3, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 11, 2)
 
-titles = ['Original Image', 'Color', 'Blur', 'Tresh']
-images = [img, img2, img3, th2]
+# From RGB to BW
+# Adaptive thresholding
+th = cv2.adaptiveThreshold(
+    img, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 17, 2)
 
+# Otsu thresholding
+ret2,th2 = cv2.threshold(img,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+
+# Otsu thresholding with Gaussian Blur
+blur = cv2.GaussianBlur(img,(5,5),0)
+ret3,th3 = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+
+#Plot
+titles = ['Threshold', 'Adaptive', 'Otsu', 'Gaussian + Otsu']
+images = [img, th, th2, th3]
 for i in range(4):
     plt.subplot(2, 2, i + 1), plt.imshow(images[i], 'gray')
     plt.title(titles[i])
     plt.xticks([]), plt.yticks([])
-
 plt.show()
 
+#Erode and dilate (Because it is black on white, erosion dilates and dilation erodes).
 kernel = np.ones((2, 2), np.uint8)
-dilation = cv2.dilate(th2, kernel, iterations=1)
-erosion = cv2.erode(th2, kernel, iterations=1)
+dilation = cv2.dilate(th, kernel, iterations=2)
+dilation2 = cv2.dilate(th2, kernel, iterations=2)
+dilation3 = cv2.dilate(th3, kernel, iterations=2)
+# erosion = cv2.erode(dilation, kernel, iterations=1)
+# dilation2 = cv2.dilate(erosion, kernel, iterations=1)
 
-# im2, contours, hierarchy = cv2.findContours(dilation, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-im2, contours, hierarchy = cv2.findContours(dilation, 1, 2)
-cv2.drawContours(img, contours, -1, (0, 255, 0), 3)
+titles2 = ['Dilation', 'Adaptive', "Otsu", 'Gaussian + Otsu']
+images2 = [img, dilation, dilation2, dilation3]
 
-rect = cv2.minAreaRect(contours)
-box = cv2.boxPoints(rect)
-box = np.int0(box)
-cv2.drawContours(img, [box], 0, (0, 0, 255), 2)
-
-titles2 = ['Original Image', 'erosion', 'dilation']
-images2 = [img, erosion, dilation]
-
-for i in range(3):
+for i in range(4):
     plt.subplot(2, 2, i + 1), plt.imshow(images2[i], 'gray')
     plt.title(titles2[i])
     plt.xticks([]), plt.yticks([])
 
 plt.show()
+
+#Morphological opening to segment characters.
+kernel2 = np.ones((4,4), np.uint8)
+opening = cv2.morphologyEx(dilation, cv2.MORPH_OPEN, kernel2)
+opening2 = cv2.morphologyEx(dilation2, cv2.MORPH_OPEN, kernel2)
+opening3 = cv2.morphologyEx(dilation3, cv2.MORPH_OPEN, kernel2)
+
+titles3 = ['Dilation', 'Adaptive', "Otsu", 'Gaussian + Otsu']
+images3 = [img, opening, opening2, opening3]
+
+for i in range(4):
+    plt.subplot(2, 2, i + 1), plt.imshow(images3[i], 'gray')
+    plt.title(titles3[i])
+    plt.xticks([]), plt.yticks([])
+
+plt.show()
+
+image, contours, hier = cv2.findContours(opening, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
+# titles3 = ['Dilation']
+# images2 = [img, dilation, dilation2, dilation3]
+# with each contour, draw boundingRect
+for c in contours:
+    # get the bounding rect
+    x, y, w, h = cv2.boundingRect(c)
+    # draw a green rectangle to visualize the bounding rect
+    if(w > 5):      #only works when the 2 binaries are split up.
+        if(h > 5):
+            cv2.rectangle(img, (x, y), (x+w, y+h), (0, 255, 0), 2)
+
+print(len(contours))
+# print(contours)
+# cv2.drawContours(img, contours, -1, (255, 255, 0), 1)
+
+# for i in range(4):
+#     plt.subplot(2, 2, i + 1), plt.imshow(images2[i], 'gray')
+#     plt.title(titles2[i])
+#     plt.xticks([]), plt.yticks([])
+#
+# plt.show()
+
+cv2.imshow("contours", img)
+cv2.waitKey()                               # hold windows open until user presses a key
+cv2.destroyAllWindows()                     # remove windows from memory
+
 
 # import numpy as np
 # import cv2
