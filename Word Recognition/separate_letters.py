@@ -2,83 +2,90 @@ import cv2
 import numpy as np
 from matplotlib import pyplot as plt
 import imutils
-import os
-import os.path
-import glob
 
-OUTPUT_FOLDER = "output"
-counts = {}
+#Load image and convert to grey.
+img = cv2.imread('samples/2cegf.png', 0)
 
-# Since the filename contains the captcha text (i.e. "2A2X.png" has the text "2A2X"),
-# grab the base filename as the text
-filename = os.path.basename("test")
-captcha_correct_text = os.path.splitext(filename)[0]
+# From RGB to BW
+# Adaptive thresholding
+# blur = cv2.blur(img,(5,5),0)
+th = cv2.adaptiveThreshold(
+    img, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 17, 2)
 
-# Load the image and convert it to grayscale
-image = cv2.imread('cap.png')
-gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+# Otsu thresholding
+ret2,th2 = cv2.threshold(img,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
 
-# Add some extra padding around the image
-gray = cv2.copyMakeBorder(gray, 8, 8, 8, 8, cv2.BORDER_REPLICATE)
+# Otsu thresholding with Gaussian Blur
+blur = cv2.GaussianBlur(img,(5,5),0)
+ret3,th3 = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
 
-# threshold the image (convert it to pure black and white)
-thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)[1]
+#Plot
+titles = ['Threshold', 'Adaptive', 'Otsu', 'Gaussian + Otsu']
+images = [img, th, th2, th3]
+for i in range(4):
+    plt.subplot(2, 2, i + 1), plt.imshow(images[i], 'gray')
+    plt.title(titles[i])
+    plt.xticks([]), plt.yticks([])
+plt.show()
 
-# find the contours (continuous blobs of pixels) the image
-contours = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+#Erode and dilate (Because it is black on white, erosion dilates and dilation erodes).
+kernel = np.ones((3,3), np.uint8)
+dilation = cv2.dilate(th, kernel, iterations=1)
+dilation2 = cv2.dilate(th2, kernel, iterations=1)
+dilation3 = cv2.dilate(th3, kernel, iterations=1)
 
-# Hack for compatibility with different OpenCV versions
-contours = contours[0] if imutils.is_cv2() else contours[1]
+titles2 = ['Dilation', 'Adaptive', "Otsu", 'Gaussian + Otsu']
+images2 = [img, dilation, dilation2, dilation3]
 
-letter_image_regions = []
+for i in range(4):
+    plt.subplot(2, 2, i + 1), plt.imshow(images2[i], 'gray')
+    plt.title(titles2[i])
+    plt.xticks([]), plt.yticks([])
 
-# Now we can loop through each of the four contours and extract the letter
-# inside of each one
-for contour in contours:
-    # Get the rectangle that contains the contour
-    (x, y, w, h) = cv2.boundingRect(contour)
+plt.show()
 
-    # Compare the width and height of the contour to detect letters that
-    # are conjoined into one chunk
-    if w / h > 1.25:
-        # This contour is too wide to be a single letter!
-        # Split it in half into two letter regions!
-        half_width = int(w / 2)
-        letter_image_regions.append((x, y, half_width, h))
-        letter_image_regions.append((x + half_width, y, half_width, h))
-    else:
-        # This is a normal letter by itself
-        letter_image_regions.append((x, y, w, h))
+erosion = cv2.erode(dilation, kernel, iterations=1)
+erosion2 = cv2.erode(dilation2, kernel, iterations=1)
+erosion3 = cv2.erode(dilation3, kernel, iterations=1)
 
-# If we found more or less than 4 letters in the captcha, our letter extraction
-# didn't work correcly. Skip the image instead of saving bad training data!
-# if len(letter_image_regions) != 4:
-#     continue
+titles3 = ['Erosion', 'Adaptive', "Otsu", 'Gaussian + Otsu']
+images3 = [img, erosion, erosion2, erosion3]
 
-# Sort the detected letter images based on the x coordinate to make sure
-# we are processing them from left-to-right so we match the right image
-# with the right letter
-letter_image_regions = sorted(letter_image_regions, key=lambda x: x[0])
+for i in range(4):
+    plt.subplot(2, 2, i + 1), plt.imshow(images3[i], 'gray')
+    plt.title(titles3[i])
+    plt.xticks([]), plt.yticks([])
 
-# Save out each letter as a single image
-for letter_bounding_box, letter_text in zip(letter_image_regions, captcha_correct_text):
-    # Grab the coordinates of the letter in the image
-    x, y, w, h = letter_bounding_box
+plt.show()
 
-    # Extract the letter from the original image with a 2-pixel margin around the edge
-    letter_image = gray[y - 2:y + h + 2, x - 2:x + w + 2]
+kernel = np.ones((3,1), np.uint8)
+dilation = cv2.dilate(erosion, kernel, iterations=1)
+dilation2 = cv2.dilate(erosion2, kernel, iterations=1)
+dilation3 = cv2.dilate(erosion3, kernel, iterations=1)
 
-    # Get the folder to save the image in
-    save_path = os.path.join(OUTPUT_FOLDER, letter_text)
+titles4 = ['Dilation', 'Adaptive', "Otsu", 'Gaussian + Otsu']
+images4 = [img, dilation, dilation2, dilation3]
 
-    # if the output directory does not exist, create it
-    if not os.path.exists(save_path):
-        os.makedirs(save_path)
+for i in range(4):
+    plt.subplot(2, 2, i + 1), plt.imshow(images4[i], 'gray')
+    plt.title(titles4[i])
+    plt.xticks([]), plt.yticks([])
 
-    # write the letter image to a file
-    count = counts.get(letter_text, 1)
-    p = os.path.join(save_path, "{}.png".format(str(count).zfill(6)))
-    cv2.imwrite(p, letter_image)
+plt.show()
 
-    # increment the count for the current key
-    counts[letter_text] = count + 1
+#Get the individual letters.
+x, y, w, h = 30, 12, 20, 38
+for  i in range(5):
+    # get the bounding rect
+    cv2.rectangle(dilation, (x, y), (x+w, y+h), (0, 255, 0), 2)
+    x += w
+
+titles3 = ['Contouring', 'Adaptive', "Otsu", 'Gaussian + Otsu']
+images3 = [img, dilation, dilation2, dilation3] #img, opening, opening2, opening3]
+
+for i in range(4):
+    plt.subplot(2, 2, i + 1), plt.imshow(images3[i], 'gray')
+    plt.title(titles3[i])
+    plt.xticks([]), plt.yticks([])
+
+plt.show()
