@@ -8,6 +8,6 @@ This notebook is an attempt at solving the [MNIST handwritten digit database](ht
 
 ## [CAPTCHA](https://github.com/Fournierp/OCR/tree/master/CAPTCHA)
 
-![alt text](https://github.com/Fournierp/OCR/tree/master/CAPTCHA/samples/2b827.png)
+![alt text](https://raw.githubusercontent.com/Fournierp/OCR/master/CAPTCHA/samples/2b827.png?token=AS-TbW2Fft3Z2B4Ak55XnhNl8oYrE1Xgks5bTKQlwA%3D%3D)
 
 This directory is an attempt at recognizing [CAPTCHA](https://en.wikipedia.org/wiki/CAPTCHA) (Completely Automated Public Turing test to tell Computers and Humans Apart) images. Built in 1997 as way for users to identify and block bots (in order to prevent spam, DDOS etc.). They have since then been replace by reCAPTCHA because they are breakable using Artificial Intelligence as we will see. The steps I followed are to remove noise and separate the characters in the images.
