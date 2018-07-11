@@ -4,6 +4,9 @@ import os.path
 from imutils import paths
 import cv2
 
+import matplotlib.pyplot as plt
+# %matplotlib inline
+
 from sklearn.preprocessing import normalize
 from sklearn.model_selection import train_test_split
 
@@ -14,8 +17,6 @@ from keras.models import Model
 import keras.optimizers
 from keras.callbacks import EarlyStopping, ReduceLROnPlateau
 from keras import backend as K
-
-from helpers import resize_to_fit
 
 # TODO: Kaggle notebook.
 
@@ -219,24 +220,25 @@ history = autoencoder.fit_generator(datagen.flow(x_train, y_train, batch_size=64
                                     callbacks=[learning_rate_reduction, early_stopping])
 
 # Visualise decoded images.
-# decoded_imgs = autoencoder.predict(x_test)
-# n = 10
-# plt.figure(figsize=(20, 4))
-# for i in range(n):
-#     # display original
-#     ax = plt.subplot(2, n, i)
-#     plt.imshow(x_test[i].reshape(40, 24))
-#     plt.gray()
-#     ax.get_xaxis().set_visible(False)
-#     ax.get_yaxis().set_visible(False)
-#
-#     # display reconstruction
-#     ax = plt.subplot(2, n, i + n)
-#     plt.imshow(decoded_imgs[i].reshape(40, 24))
-#     plt.gray()
-#     ax.get_xaxis().set_visible(False)
-#     ax.get_yaxis().set_visible(False)
-# plt.show()
+decoded_imgs = autoencoder.predict(x_test)
+n = 5
+plt.figure(figsize=(20, 4))
+for i in range(n):
+    i = i+1
+    # display original
+    ax = plt.subplot(2, n, i)
+    plt.imshow(x_test[i].reshape(40, 24))
+    plt.gray()
+    ax.get_xaxis().set_visible(False)
+    ax.get_yaxis().set_visible(False)
+
+    # display reconstruction
+    ax = plt.subplot(2, n, i + n)
+    plt.imshow(decoded_imgs[i].reshape(40, 24))
+    plt.gray()
+    ax.get_xaxis().set_visible(False)
+    ax.get_yaxis().set_visible(False)
+plt.show()
 
 
 # Salt and peper noise.
@@ -245,6 +247,8 @@ x_train_noisy = x_train + noise_factor * \
     np.random.normal(loc=0.0, scale=1.0, size=x_train.shape)
 x_test_noisy = x_test + noise_factor * \
     np.random.normal(loc=0.0, scale=1.0, size=x_test.shape)
+
+#TODO: augmentation ?
 
 x_train_noisy = np.clip(x_train_noisy, 0., 1.)
 x_test_noisy = np.clip(x_test_noisy, 0., 1.)
@@ -255,26 +259,27 @@ history = autoencoder.fit_generator(datagen.flow(x_train, y_train, batch_size=64
                                     verbose=1, steps_per_epoch=x_train.shape[0],
                                     callbacks=[learning_rate_reduction, early_stopping])
 # Save model.
-model.save_model("denoising.model")
+autoencoder.save("denoising.model")
 
 # Visualise decoded images.
-# decoded_imgs = autoencoder.predict(x_test)
-# n = 10
-# plt.figure(figsize=(20, 4))
-# for i in range(n):
-#     # display original
-#     ax = plt.subplot(2, n, i)
-#     plt.imshow(x_test_noisy[i].reshape(40, 24))
-#     plt.gray()
-#     ax.get_xaxis().set_visible(False)
-#     ax.get_yaxis().set_visible(False)
-#     # display reconstruction
-#     ax = plt.subplot(2, n, i + n)
-#     plt.imshow(decoded_imgs[i].reshape(40, 24))
-#     plt.gray()
-#     ax.get_xaxis().set_visible(False)
-#     ax.get_yaxis().set_visible(False)
-# plt.show()
+decoded_imgs = autoencoder.predict(x_test)
+n = 5
+plt.figure(figsize=(20, 4))
+for i in range(n):
+    i = i+1
+    # display original
+    ax = plt.subplot(2, n, i)
+    plt.imshow(x_test_noisy[i].reshape(40, 24))
+    plt.gray()
+    ax.get_xaxis().set_visible(False)
+    ax.get_yaxis().set_visible(False)
+    # display reconstruction
+    ax = plt.subplot(2, n, i + n)
+    plt.imshow(decoded_imgs[i].reshape(40, 24))
+    plt.gray()
+    ax.get_xaxis().set_visible(False)
+    ax.get_yaxis().set_visible(False)
+plt.show()
 
 # Use denoise images.
 decoded_images = autoencoder.predict(data)
@@ -313,4 +318,4 @@ scores = labeller.evaluate(x_test, y_test, verbose=1)
 print("Accuracy: ", scores[1])
 
 # Save model.
-model.save_model("labelling.model")
+labeller.save("labelling.model")
