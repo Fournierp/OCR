@@ -71,7 +71,5 @@ for (i, captcha_image) in enumerate(captcha_images):
         i, = np.where(array_pred == 1)
         prediction = prediction + array_letter[i][0]
 
-    # print(captcha_correct_text)
-    # print(prediction)
     if(prediction is captcha_correct_text):
         print("Correct !")

@@ -10,7 +10,7 @@ from sklearn.model_selection import train_test_split
 
 from keras.utils.np_utils import to_categorical
 from keras.preprocessing.image import ImageDataGenerator
-from keras.layers import Conv2D, Dense, Dropout, Input, MaxPooling2D, UpSampling2D
+from keras.layers import Conv2D, Dense, Dropout, Flatten ,Input, MaxPooling2D, UpSampling2D
 from keras.models import Model
 import keras.optimizers
 from keras.callbacks import EarlyStopping, ReduceLROnPlateau
@@ -190,19 +190,9 @@ autoencoder = Model(input_img, decoded)
 autoencoder.compile(optimizer=optimizer,
                     loss='binary_crossentropy', metrics=['accuracy'])
 
-# # TERMINAL CMD : tensorboard --logdir=/tmp/autoencoder
-# from keras.callbacks import TensorBoard
-#
-# autoencoder.fit(x_train, x_train,
-#                 epochs=1,
-#                 batch_size=128,
-#                 # shuffle=True,
-#                 validation_data=(x_test, x_test),
-#                 callbacks=[TensorBoard(log_dir='/tmp/autoencoder'), learning_rate_reduction])
-
 history = autoencoder.fit_generator(datagen.flow(x_train, y_train, batch_size=64),
                                     # history = autoencoder.fit(x_train, y_train, batch_size=64,
-                                    epochs=1, validation_data=(x_test, y_test),
+                                    epochs=10, validation_data=(x_test, y_test),
                                     verbose=1, steps_per_epoch=x_train.shape[0],
                                     callbacks=[learning_rate_reduction, early_stopping])
 
@@ -235,14 +225,25 @@ x_train_noisy = x_train + noise_factor * \
 x_test_noisy = x_test + noise_factor * \
     np.random.normal(loc=0.0, scale=1.0, size=x_test.shape)
 
-# TODO: augmentation ?
+# Data augmentation.
+datagen = ImageDataGenerator(
+    # randomly rotate images in the range (degrees, 0 to 180).
+    rotation_range=15,
+    zoom_range=0.1,  # Randomly zoom image.
+    # randomly shift images horizontally (fraction of total width).
+    width_shift_range=0.1,
+    # randomly shift images vertically (fraction of total height).
+    height_shift_range=0.1,
+)
+
+datagen.fit(x_train)
 
 x_train_noisy = np.clip(x_train_noisy, 0., 1.)
 x_test_noisy = np.clip(x_test_noisy, 0., 1.)
 
 history = autoencoder.fit_generator(datagen.flow(x_train, y_train, batch_size=64),
                                     # history = autoencoder.fit(x_train_noisy, y_train, batch_size=64,
-                                    epochs=1, validation_data=(x_test_noisy, y_test),
+                                    epochs=10, validation_data=(x_test_noisy, y_test),
                                     verbose=1, steps_per_epoch=x_train.shape[0],
                                     callbacks=[learning_rate_reduction, early_stopping])
 # Save model.
@@ -297,7 +298,7 @@ labeller.compile(optimizer=optimizer,
 
 history = labeller.fit_generator(datagen.flow(x_train, y_train, batch_size=64),
                                  # history = labeller.fit(x_train, y_train, batch_size=64,
-                                 epochs=1, validation_data=(x_test, y_test),
+                                 epochs=10, validation_data=(x_test, y_test),
                                  verbose=1, steps_per_epoch=x_train.shape[0],
                                  callbacks=[learning_rate_reduction, early_stopping])
 
