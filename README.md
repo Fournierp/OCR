@@ -6,7 +6,7 @@
 
 This notebook is the source code used for the submissions for [Kaggle Competition](https://www.kaggle.com/c/digit-recognizer). The goal of the competition is to classify images from the [MNIST handwritten digit database](http://yann.lecun.com/exdb/mnist/). The solution developed produced 99.928% accuracy and got me to 60th place. (top 3%).
 
-The approach I took was to perform an Exploratory Data Analysis which enabled me to notice that the data was not noisy but that not all pixels in the images were useful. Thus I could do some Dimensionality Reduction. I build a simple Convolutional Neural Network (CNN) using Keras. The steps I followed are (as described in the [Jupyter Notebook](https://github.com/Fournierp/OCR/tree/master/Digit%20Recognition/Digit%20Recognition.ipynb)) to do normalization, reshaping, data augmentation and training with an Adam Optimizer and a ReduceLROnPlateau callback.
+The approach I took was to perform an Exploratory Data Analysis which enabled me to notice that the data was not noisy but that not all pixels in the images were useful. Thus I could do some Dimensionality Reduction. I build a simple Convolutional Neural Network (CNN) using Keras. The steps I followed are (as described in the [Jupyter Notebook](https://github.com/Fournierp/OCR/tree/master/Digit%20Recognition/MNIST.ipynb)) to do normalization, reshaping, data augmentation and training with an Adam Optimizer and a ReduceLROnPlateau callback.
 
 
 ## [CAPTCHA](https://github.com/Fournierp/OCR/tree/master/CAPTCHA)
